@@ -1,0 +1,18 @@
+# Object files and binaries
+*.o
+sws
+
+# Log files
+*.log
+access.log
+
+# Build archives
+*.tar
+*.tar.gz
+
+# System dump and temporary files
+*.core
+vgcore.*
+.DS_Store
+*~
+*.swp
