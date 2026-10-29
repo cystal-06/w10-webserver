@@ -129,7 +129,7 @@
 <div class="info-box">
   <p><strong>Học phần:</strong> CS631 -- Advanced Programming in the UNIX Environment</p>
   <p><strong>Đề tài:</strong> Group Project: Write a simple web server (sws)</p>
-  <p><strong>Sinh viên thực hiện:</strong> Nguyễn Công Đức (Nhóm trưởng - 45%) & Nhóm sinh viên</p>
+  <p><strong>Sinh viên thực hiện:</strong> Nguyễn Công Đức (Nhóm trưởng - 40%) & Nhóm sinh viên (30% - 30%)</p>
   <p><strong>Mã số sinh viên (MSSV):</strong> 24IT340 &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Lớp:</strong> 24SE1</p>
   <p><strong>Môi trường thực nghiệm:</strong> Linux Terminal (Arch Linux, Kernel 6.x), GCC 16 (chuẩn C99 / POSIX.1-2008)</p>
   <p><strong>Kho lưu trữ GitHub:</strong> <a href="https://github.com/cystal-06/w10-webserver">https://github.com/cystal-06/w10-webserver</a></p>
@@ -208,6 +208,34 @@ w10-webserver/
 
 <p><strong>4. Quy trình xử lý yêu cầu (Lifecycle Workflow):</strong></p>
 <p>Client kết nối ➔ Socket tiếp nhận qua <code>poll()</code> và <code>accept()</code> ➔ Ở chế độ Daemon, máy chủ <code>fork()</code> một tiến trình Worker độc lập ➔ Đọc và phân tích cú pháp HTTP Request ➔ Kiểm tra an toàn đường dẫn chống Path Traversal qua <code>realpath()</code> ➔ Phân luồng xử lý: Tệp tĩnh (kèm mã MIME từ <code>libmagic</code>), Tự sinh Directory Indexing khi thiếu <code>index.html</code>, hoặc Thực thi kịch bản CGI ➔ Ghi nhật ký truy cập vào file log ➔ Đóng kết nối TCP và tự động thu hồi tiến trình con qua tín hiệu <code>SIGCHLD</code> (Zero Zombie).</p>
+
+<p><strong>5. Bảng Phân công Nhiệm vụ Nhóm 3 Thành viên:</strong></p>
+<table>
+  <tr>
+    <th style="width: 25%;">Thành viên</th>
+    <th style="width: 15%;">Tỷ trọng</th>
+    <th style="width: 25%;">Vai trò chính</th>
+    <th>Phân hệ đảm nhiệm & Nhiệm vụ cụ thể</th>
+  </tr>
+  <tr>
+    <td><strong>Nguyễn Công Đức</strong><br><em>(Nhóm trưởng - User1)</em></td>
+    <td style="text-align: center;"><strong>40%</strong></td>
+    <td>Lead Systems Architect & Core Daemon Engine</td>
+    <td>- Thiết kế kiến trúc Base, cấu trúc dữ liệu cốt lõi (<code>sws.h</code>).<br>- Bộ phân tích CLI <code>getopt</code> xử lý đủ 6 cờ: <code>-d, -h, -c, -i, -l, -p</code> và <code>dir</code>.<br>- Quy trình hóa Daemon (<code>fork</code>, <code>setsid</code>, chuyển hướng <code>/dev/null</code>, <code>umask</code>).<br>- Động cơ mạng Dual-Stack (IPv4 & IPv6 song song, <code>poll</code>, <code>accept</code>).<br>- Quản lý tiến trình: Bắt <code>SIGCHLD</code> (Zero Zombie), <code>SIGINT/SIGTERM</code>.<br>- Viết <code>Makefile</code> chuẩn POSIX, bộ test tự động và quản trị kho Git.</td>
+  </tr>
+  <tr>
+    <td><strong>Thành viên 2</strong><br><em>(User2)</em></td>
+    <td style="text-align: center;"><strong>30%</strong></td>
+    <td>HTTP Protocol & Parser Specialist</td>
+    <td>- Xây dựng bộ phân tích cú pháp HTTP Request (<code>http.c/.h</code>) theo <strong>RFC 1945</strong>.<br>- Xử lý phương thức <code>GET</code> và <code>HEAD</code>, kiểm tra Relative URI (từ chối mã 400).<br>- Hiện thực cơ chế âm thầm hạ cấp (Quiet downgrade) từ <code>HTTP/1.1</code> về <code>HTTP/1.0</code>.<br>- Phân tích tiêu đề điều kiện <code>If-Modified-Since</code> (trả về mã <code>304 Not Modified</code>).<br>- Xây dựng bộ phát sinh trang mã lỗi HTML chuẩn (400, 403, 404, 500, 501).</td>
+  </tr>
+  <tr>
+    <td><strong>Thành viên 3</strong><br><em>(User3)</em></td>
+    <td style="text-align: center;"><strong>30%</strong></td>
+    <td>File System, MIME, CGI & Logging Specialist</td>
+    <td>- Quản lý tài nguyên đĩa (<code>resource.c/.h</code>), chống Path Traversal (<code>realpath</code>).<br>- Xử lý thư mục người dùng <code>~user</code> (ánh xạ vào <code>/home/user/sws/</code>).<br>- Tự động tạo danh mục thư mục (Directory Indexing) bằng <code>scandir</code> + <code>alphasort</code>.<br>- Nhận diện kiểu MIME tự động qua thư viện <code>libmagic</code> (mẫu <code>magic(5)</code>).<br>- Động cơ thực thi kịch bản CGI (<code>cgi.c/.h</code> - <strong>RFC 3875</strong>) qua Pipe I/O.<br>- Module ghi nhật ký truy cập (<code>logger.c/.h</code>) định dạng chuẩn Apache.</td>
+  </tr>
+</table>
 
 <!-- ========================================== -->
 <h2>II. CÁC LỆNH CHẠY THỬ & KẾT QUẢ THỰC NGHIỆM</h2>
