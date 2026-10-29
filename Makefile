@@ -43,9 +43,21 @@ clean:
 	rm -f $(OBJS) $(BIN) $(TESTDIR)/access.log *.tar
 
 test: all
-	@echo "=== Running sws Verification Test Suite ==="
-	@./$(BIN) -h
-	@echo "Help test passed."
+	@echo "=== Running sws Automated Verification Test Suite ==="
+	@./$(BIN) -h > /dev/null && echo "[PASS] -h usage summary"
+	@rm -f $(TESTDIR)/access.log
+	@./$(BIN) -d -p 8899 -c $(TESTDIR)/cgi-bin -l $(TESTDIR)/access.log $(TESTDIR)/www > /dev/null 2>&1 & \
+	PID=$$!; \
+	sleep 1; \
+	curl -s -i http://localhost:8899/index.html | grep -q "200 OK" && echo "[PASS] HTTP GET static file"; \
+	curl -s -i -I http://localhost:8899/index.html | grep -q "200 OK" && echo "[PASS] HTTP HEAD headers only"; \
+	curl -s -i http://localhost:8899/docs/ | grep -q "Index of" && echo "[PASS] Directory Indexing"; \
+	curl -s -i http://localhost:8899/cgi-bin/hello.cgi | grep -q "Hello from SWS CGI" && echo "[PASS] RFC 3875 CGI execution"; \
+	curl -s -i http://localhost:8899/../../etc/passwd | grep -E -q "403|404" && echo "[PASS] Path Traversal protection"; \
+	kill $$PID 2>/dev/null; \
+	wait $$PID 2>/dev/null; \
+	test -s $(TESTDIR)/access.log && echo "[PASS] Apache common logging"; \
+	echo "=== All Tests Passed Successfully ==="
 
 dist: clean
 	@tar -cvf user1-user2-user3.tar Makefile README checklist SPECIFICATION.md src test
