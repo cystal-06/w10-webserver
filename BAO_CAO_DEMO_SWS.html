@@ -39,7 +39,7 @@
     font-size: 14pt;
     font-weight: bold;
     color: #1a5276;
-    margin-top: 22px;
+    margin-top: 24px;
     margin-bottom: 8px;
     border-bottom: 1.5px solid #1a5276;
     padding-bottom: 4px;
@@ -58,6 +58,33 @@
     font-family: 'Courier New', Courier, monospace;
     font-size: 11pt;
     margin: 6px 0;
+  }
+  pre {
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10.5pt;
+    line-height: 1.3;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0;
+    font-size: 11.5pt;
+  }
+  table, th, td {
+    border: 1px solid #333;
+  }
+  th {
+    background-color: #f2f4f4;
+    padding: 6px 8px;
+    font-weight: bold;
+    text-align: left;
+  }
+  td {
+    padding: 5px 8px;
+    vertical-align: top;
   }
   .img-box {
     border: 2px dashed #7f8c8d;
@@ -83,7 +110,15 @@
     margin-bottom: 18px;
   }
   p {
-    margin: 4px 0;
+    margin: 5px 0;
+    text-align: justify;
+  }
+  ul {
+    margin: 4px 0 10px 0;
+    padding-left: 22px;
+  }
+  li {
+    margin-bottom: 3px;
   }
 </style>
 </head>
@@ -92,18 +127,87 @@
 <div class="header-title">BÁO CÁO THỰC NGHIỆM VẬN HÀNH MÁY CHỦ WEB SWS</div>
 
 <div class="info-box">
-  <p><strong>Đề tài:</strong> Simple Web Server (sws) - CS631 Group Project</p>
-  <p><strong>Sinh viên thực hiện:</strong> Nguyễn Công Đức</p>
+  <p><strong>Học phần:</strong> CS631 -- Advanced Programming in the UNIX Environment</p>
+  <p><strong>Đề tài:</strong> Group Project: Write a simple web server (sws)</p>
+  <p><strong>Sinh viên thực hiện:</strong> Nguyễn Công Đức (Nhóm trưởng - 45%) & Nhóm sinh viên</p>
   <p><strong>Mã số sinh viên (MSSV):</strong> 24IT340 &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Lớp:</strong> 24SE1</p>
-  <p><strong>Môi trường:</strong> Linux Terminal, GCC (tiêu chuẩn POSIX C99)</p>
-  <p><strong>GitHub:</strong> <a href="https://github.com/cystal-06/w10-webserver">https://github.com/cystal-06/w10-webserver</a></p>
+  <p><strong>Môi trường thực nghiệm:</strong> Linux Terminal (Arch Linux, Kernel 6.x), GCC 16 (chuẩn C99 / POSIX.1-2008)</p>
+  <p><strong>Kho lưu trữ GitHub:</strong> <a href="https://github.com/cystal-06/w10-webserver">https://github.com/cystal-06/w10-webserver</a></p>
 </div>
 
 <!-- ========================================== -->
-<h2>I. GIỚI THIỆU SƠ LƯỢC</h2>
-<p>Chương trình <strong>sws (Simple Web Server)</strong> được xây dựng hoàn chỉnh bằng ngôn ngữ C phục vụ giao thức HTTP/1.0 (RFC 1945) và kịch bản động CGI/1.1 (RFC 3875). Máy chủ hỗ trợ đầy đủ các cờ tham số dòng lệnh:</p>
+<h2>I. TỔNG QUAN HỆ THỐNG & CẤU TRÚC DỰ ÁN</h2>
+
+<p><strong>1. Mục tiêu đề tài:</strong> Xây dựng hoàn chỉnh một máy chủ web độc lập (Simple Web Server - <code>sws</code>) bằng ngôn ngữ C, tương tác trực tiếp với Socket API của nhân UNIX. Máy chủ tuân thủ nghiêm ngặt chuẩn <strong>HTTP/1.0 (RFC 1945)</strong>, hỗ trợ thực thi kịch bản động <strong>CGI/1.1 (RFC 3875)</strong>, vận hành như một <strong>System Daemon</strong> chuẩn mực và đạt tính khả chuyển trên cả ba nền tảng: NetBSD 11.0, Linux và OmniOS.</p>
+
+<p><strong>2. Cú pháp dòng lệnh và Bảng tham số:</strong></p>
 <div class="cmd-box">sws [-dh] [-c dir] [-i address] [-l file] [-p port] dir</div>
-<p>Hệ thống có khả năng chạy nền (System Daemon), lắng nghe đa cổng kép IPv4/IPv6, tự động sinh danh mục thư mục khi thiếu <code>index.html</code>, nhận diện định dạng MIME tự động qua <code>libmagic</code>, chặn đứng tấn công Path Traversal và ghi nhật ký truy cập theo chuẩn Apache Common Log.</p>
+
+<table>
+  <tr>
+    <th style="width: 20%;">Cờ / Tham số</th>
+    <th style="width: 20%;">Mặc định</th>
+    <th>Chức năng kỹ thuật</th>
+  </tr>
+  <tr>
+    <td><strong><code>dir</code></strong></td>
+    <td>Bắt buộc</td>
+    <td>Thư mục gốc chứa tài liệu phục vụ web (Document Root).</td>
+  </tr>
+  <tr>
+    <td><strong><code>-p port</code></strong></td>
+    <td>8080</td>
+    <td>Cổng TCP lắng nghe các kết nối HTTP gửi tới.</td>
+  </tr>
+  <tr>
+    <td><strong><code>-i address</code></strong></td>
+    <td>Mọi địa chỉ</td>
+    <td>Ràng buộc địa chỉ IPv4 hoặc IPv6 cụ thể (mặc định lắng nghe đa giao thức trên cả IPv4 và IPv6).</td>
+  </tr>
+  <tr>
+    <td><strong><code>-c dir</code></strong></td>
+    <td>Tắt</td>
+    <td>Chỉ định thư mục CGI Root cho phép thực thi kịch bản động với URI bắt đầu bằng <code>/cgi-bin/</code>.</td>
+  </tr>
+  <tr>
+    <td><strong><code>-l file</code></strong></td>
+    <td>Tắt</td>
+    <td>Ghi nhật ký truy cập vào file chỉ định theo định dạng Apache: <code>%a %t "%r" %>s %b</code>.</td>
+  </tr>
+  <tr>
+    <td><strong><code>-d</code></strong></td>
+    <td>Tắt (Daemon)</td>
+    <td>Chế độ gỡ lỗi: Chạy trên foreground, phục vụ tuần tự 1 kết nối tại một thời điểm, log ra <code>stdout</code>.</td>
+  </tr>
+  <tr>
+    <td><strong><code>-h</code></strong></td>
+    <td>Tắt</td>
+    <td>Hiển thị tóm tắt hướng dẫn sử dụng và thoát với mã trạng thái 0.</td>
+  </tr>
+</table>
+
+<p><strong>3. Cấu trúc Mô-đun Hệ thống (Modular Architecture):</strong></p>
+<pre>
+w10-webserver/
+├── Makefile       : Quy tắc biên dịch nghiêm ngặt (-Wall -Wextra -Werror -pedantic)
+├── README         : Thông tin phân công nhiệm vụ nhóm và hướng dẫn vận hành
+├── checklist      : Bảng kiểm định chất lượng nộp bài theo chuẩn CS631
+├── SPECIFICATION  : Báo cáo đặc tả hệ thống toàn diện (SSD)
+├── src/
+│   ├── sws.h      : Định nghĩa cấu trúc ServerConfig, HttpRequest, HttpResponse
+│   ├── main.c     : CLI parser (getopt), quy trình hóa Daemon, xử lý SIGCHLD
+│   ├── network.c  : Quản lý socket kép Dual-Stack (IPv4 & IPv6), poll(), accept()
+│   ├── http.c     : Bộ phân tích cú pháp HTTP/1.0 (GET, HEAD), 304 Caching, hạ cấp HTTP/1.1
+│   ├── resource.c : Phân giải đường dẫn, chống Path Traversal (realpath), Directory Indexing, libmagic
+│   ├── cgi.c      : Động cơ chạy script CGI RFC 3875 qua Pipe I/O Redirection
+│   └── logger.c   : Hệ thống ghi nhật ký nguyên tử định dạng chuẩn Apache
+└── test/
+    ├── www/       : Thư mục chứa tài nguyên web tĩnh (index.html, style.css, docs/)
+    └── cgi-bin/   : Thư mục chứa kịch bản CGI thực thi (hello.cgi, env.cgi)
+</pre>
+
+<p><strong>4. Quy trình xử lý yêu cầu (Lifecycle Workflow):</strong></p>
+<p>Client kết nối ➔ Socket tiếp nhận qua <code>poll()</code> và <code>accept()</code> ➔ Ở chế độ Daemon, máy chủ <code>fork()</code> một tiến trình Worker độc lập ➔ Đọc và phân tích cú pháp HTTP Request ➔ Kiểm tra an toàn đường dẫn chống Path Traversal qua <code>realpath()</code> ➔ Phân luồng xử lý: Tệp tĩnh (kèm mã MIME từ <code>libmagic</code>), Tự sinh Directory Indexing khi thiếu <code>index.html</code>, hoặc Thực thi kịch bản CGI ➔ Ghi nhật ký truy cập vào file log ➔ Đóng kết nối TCP và tự động thu hồi tiến trình con qua tín hiệu <code>SIGCHLD</code> (Zero Zombie).</p>
 
 <!-- ========================================== -->
 <h2>II. CÁC LỆNH CHẠY THỬ & KẾT QUẢ THỰC NGHIỆM</h2>
