@@ -1,0 +1,61 @@
+CS631 -- Advanced Programming in the UNIX Environment
+Group Project: Simple Web Server (sws)
+
+================================================================================
+1. GROUP MEMBERS & COLLABORATION DETAILS
+================================================================================
+- Nguyen Cong Duc (Team Leader - User1)
+  * Role: Lead Systems Architect & Core Daemon Engine
+  * Contributions:
+    - Designed Base Architecture and CLI Option Parser (getopt) supporting
+      all required flags: -d, -h, -c dir, -i address, -l file, -p port, and dir.
+    - Implemented POSIX daemonization (daemonize_server) with session separation
+      (setsid), descriptor redirection to /dev/null, and umask management.
+    - Implemented Dual-Stack IPv4 (AF_INET) and IPv6 (AF_INET6) network listener
+      with SO_REUSEADDR and IPV6_V6ONLY configuration.
+    - Setup signal handling for SIGCHLD (zombie process reaper via waitpid) and
+      clean shutdown on SIGINT/SIGTERM.
+    - Created strict POSIX Makefile, acceptance test suite, and System Specification.
+
+- Member 2 (User2)
+  * Role: HTTP Protocol & Parser Specialist
+  * Contributions:
+    - Implemented RFC 1945 HTTP/1.0 request parser (http.c / http.h).
+    - Enforced relative URI validation and method restrictions (GET and HEAD).
+    - Added silent downgrade logic from HTTP/1.1 to HTTP/1.0.
+    - Implemented If-Modified-Since header validation (304 Not Modified).
+    - Implemented standardized HTTP response headers and error dispatcher
+      (200, 304, 400, 403, 404, 500, 501).
+
+- Member 3 (User3)
+  * Role: File System, MIME, CGI & Logging Specialist
+  * Contributions:
+    - Implemented resource path resolution (resource.c / resource.h) with strict
+      realpath() boundary checks to prevent Directory Traversal attacks.
+    - Added user directory translation (/~<user>/ -> /home/<user>/sws/).
+    - Implemented alphanumeric directory indexing when index.html is absent,
+      filtering out hidden dot files.
+    - Integrated libmagic for RFC-compliant Content-Type determination.
+    - Implemented RFC 3875 CGI engine (cgi.c / cgi.h) with pipe I/O redirection.
+    - Implemented Apache Common Log format logging engine (logger.c / logger.h).
+
+================================================================================
+2. COMPILATION & USAGE
+================================================================================
+To compile the server on NetBSD 11.0, Linux, or OmniOS:
+  $ make
+
+To run the server in debug mode:
+  $ ./sws -d -p 8080 -c test/cgi-bin test/www
+
+To run the server as a background system daemon:
+  $ ./sws -p 8080 -l test/access.log -c test/cgi-bin test/www
+
+To run tests:
+  $ make test
+
+To clean build artifacts:
+  $ make clean
+
+To create submission tar archive:
+  $ make dist

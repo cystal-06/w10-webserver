@@ -1,0 +1,15 @@
+Did you write all the code yourself as a team? Yes
+Does your code compile without warnings or errors? Yes
+Did you provide a Makefile? Yes
+Did you check the return value of all functions? Yes
+Does sws detach and run as a daemon? Yes
+Does sws handle multiple concurrent connections? Yes
+Does sws implement relative URI resolution? Yes
+Does sws implement HTTP/1.0 GET and HEAD? Yes
+Does sws support If-Modified-Since? Yes
+Does sws support directory indexing without dot files? Yes
+Does sws support user directories? Yes
+Does sws support RFC 3875 CGIs? Yes
+Does sws implement Apache Common Log format? Yes
+Did you verify memory safety and avoid zombie processes? Yes
+Did you test on the required reference platforms? Yes
