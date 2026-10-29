@@ -156,7 +156,7 @@
   </tr>
   <tr>
     <td><strong><code>-p port</code></strong></td>
-    <td>8080</td>
+    <td>8085</td>
     <td>Cổng TCP lắng nghe các kết nối HTTP gửi tới.</td>
   </tr>
   <tr>
@@ -263,18 +263,18 @@ w10-webserver/
 <!-- TEST 3 -->
 <h3>3. Khởi động Server ở chế độ gỡ lỗi (-d)</h3>
 <p><strong>Câu lệnh:</strong></p>
-<div class="cmd-box">./sws -d -p 8080 -c test/cgi-bin -l test/access.log test/www</div>
-<p><strong>Mô tả:</strong> Máy chủ chạy trực tiếp trên console (foreground), lắng nghe cổng 8080 và in toàn bộ nhật ký truy cập trực tiếp ra màn hình terminal.</p>
+<div class="cmd-box">./sws -d -p 8085 -c test/cgi-bin -l test/access.log test/www</div>
+<p><strong>Mô tả:</strong> Máy chủ chạy trực tiếp trên console (foreground), lắng nghe cổng 8085 và in toàn bộ nhật ký truy cập trực tiếp ra màn hình terminal.</p>
 <div class="img-box">
   [DÁN ẢNH CHỤP TERMINAL DEMO 3 TẠI ĐÂY]
 </div>
-<div class="img-caption">Hình 3: Máy chủ sws đang chạy ở chế độ Debug trên cổng 8080</div>
+<div class="img-caption">Hình 3: Máy chủ sws đang chạy ở chế độ Debug trên cổng 8085</div>
 
 <!-- TEST 4 -->
 <h3>4. Tải file tĩnh trang chủ (GET /index.html)</h3>
 <p><strong>Câu lệnh:</strong></p>
-<div class="cmd-box">curl -i http://localhost:8080/index.html</div>
-<p><em>(Hoặc mở trình duyệt Web truy cập: <code>http://localhost:8080</code>)</em></p>
+<div class="cmd-box">curl -i http://localhost:8085/index.html</div>
+<p><em>(Hoặc mở trình duyệt Web truy cập: <code>http://localhost:8085</code>)</em></p>
 <p><strong>Mô tả:</strong> Máy chủ phản hồi mã <code>HTTP/1.0 200 OK</code>, tiêu đề <code>Content-Type: text/html</code> do <code>libmagic</code> nhận diện, độ dài <code>Content-Length</code> và nội dung trang web hiển thị đúng thông tin sinh viên Nguyễn Công Đức.</p>
 <div class="img-box">
   [DÁN ẢNH CHỤP DEMO 4 TẠI ĐÂY]
@@ -284,7 +284,7 @@ w10-webserver/
 <!-- TEST 5 -->
 <h3>5. Kiểm tra phương thức HEAD (chỉ nhận Header, không có Body)</h3>
 <p><strong>Câu lệnh:</strong></p>
-<div class="cmd-box">curl -i -I http://localhost:8080/index.html</div>
+<div class="cmd-box">curl -i -I http://localhost:8085/index.html</div>
 <p><strong>Mô tả:</strong> Server phản hồi mã <code>200 OK</code> và các trường tiêu đề đầy đủ, nhưng ngắt luồng không gửi phần thân tệp (Body) theo chuẩn RFC 1945.</p>
 <div class="img-box">
   [DÁN ẢNH CHỤP TERMINAL DEMO 5 TẠI ĐÂY]
@@ -294,8 +294,8 @@ w10-webserver/
 <!-- TEST 6 -->
 <h3>6. Kiểm tra tự động sinh danh mục thư mục (Directory Indexing)</h3>
 <p><strong>Câu lệnh:</strong></p>
-<div class="cmd-box">curl -i http://localhost:8080/docs/</div>
-<p><em>(Hoặc mở trình duyệt truy cập: <code>http://localhost:8080/docs/</code>)</em></p>
+<div class="cmd-box">curl -i http://localhost:8085/docs/</div>
+<p><em>(Hoặc mở trình duyệt truy cập: <code>http://localhost:8085/docs/</code>)</em></p>
 <p><strong>Mô tả:</strong> Do thư mục <code>test/www/docs/</code> không có file <code>index.html</code>, máy chủ tự động sinh ra mã HTML danh sách tập tin theo thứ tự chữ cái và tự động ẩn các tệp có dấu chấm <code>.</code> ở đầu.</p>
 <div class="img-box">
   [DÁN ẢNH CHỤP DEMO 6 TẠI ĐÂY]
@@ -305,8 +305,8 @@ w10-webserver/
 <!-- TEST 7 -->
 <h3>7. Thực thi kịch bản động CGI (/cgi-bin/hello.cgi)</h3>
 <p><strong>Câu lệnh:</strong></p>
-<div class="cmd-box">curl -i http://localhost:8080/cgi-bin/hello.cgi</div>
-<p><strong>Mô tả:</strong> Yêu cầu được chuyển tiếp vào thư mục CGI Root qua cờ <code>-c</code>, máy chủ thiết lập biến môi trường RFC 3875 (như <code>REQUEST_METHOD=GET</code>, <code>REMOTE_ADDR=::1</code>, <code>SERVER_PORT=8080</code>) và trả về kết quả xuất của script.</p>
+<div class="cmd-box">curl -i http://localhost:8085/cgi-bin/hello.cgi</div>
+<p><strong>Mô tả:</strong> Yêu cầu được chuyển tiếp vào thư mục CGI Root qua cờ <code>-c</code>, máy chủ thiết lập biến môi trường RFC 3875 (như <code>REQUEST_METHOD=GET</code>, <code>REMOTE_ADDR=::1</code>, <code>SERVER_PORT=8085</code>) và trả về kết quả xuất của script.</p>
 <div class="img-box">
   [DÁN ẢNH CHỤP TERMINAL DEMO 7 TẠI ĐÂY]
 </div>
@@ -315,7 +315,7 @@ w10-webserver/
 <!-- TEST 8 -->
 <h3>8. Thử nghiệm tấn công Directory Traversal (chống đọc trộm file)</h3>
 <p><strong>Câu lệnh:</strong></p>
-<div class="cmd-box">curl -i http://localhost:8080/../../etc/passwd</div>
+<div class="cmd-box">curl -i http://localhost:8085/../../etc/passwd</div>
 <p><strong>Mô tả:</strong> Máy chủ sử dụng hàm <code>realpath()</code> đối chiếu ranh giới, phát hiện hành vi truy cập trái phép vượt ngoài Document Root và lập tức chặn đứng với mã lỗi <code>404 Not Found</code> (hoặc <code>403 Forbidden</code>).</p>
 <div class="img-box">
   [DÁN ẢNH CHỤP TERMINAL DEMO 8 TẠI ĐÂY]
@@ -335,7 +335,7 @@ w10-webserver/
 <!-- TEST 10 -->
 <h3>10. Kiểm tra chế độ chạy ngầm System Daemon</h3>
 <p><strong>Câu lệnh:</strong></p>
-<div class="cmd-box">./sws -p 8080 -c test/cgi-bin -l test/access.log test/www<br>ps -ef | grep sws</div>
+<div class="cmd-box">./sws -p 8085 -c test/cgi-bin -l test/access.log test/www<br>ps -ef | grep sws</div>
 <p><strong>Mô tả:</strong> Khi không dùng cờ <code>-d</code>, tiến trình tự tách khỏi terminal, chạy ngầm dưới nền hệ điều hành Linux. Sau đó có thể dừng server bằng lệnh <code>pkill sws</code>.</p>
 <div class="img-box">
   [DÁN ẢNH CHỤP TERMINAL DEMO 10 TẠI ĐÂY]
