@@ -83,7 +83,7 @@ int resource_resolve(const ServerConfig *config, const char *raw_uri, char *reso
     }
 
     char base_dir[PATH_MAX];
-    char target_path[PATH_MAX];
+    char target_path[PATH_MAX * 2];
 
     /* 1. Check for CGI execution request (/cgi-bin/...) */
     if (strncmp(uri, "/cgi-bin", 8) == 0 && config->cgi_dir != NULL) {
@@ -173,7 +173,7 @@ int resource_resolve(const ServerConfig *config, const char *raw_uri, char *reso
 
     if (S_ISDIR(st.st_mode)) {
         /* Check if index.html exists within this directory */
-        char index_candidate[PATH_MAX];
+        char index_candidate[PATH_MAX * 2];
         snprintf(index_candidate, sizeof(index_candidate), "%s/index.html", canonical_target);
         struct stat ist;
         if (stat(index_candidate, &ist) == 0 && S_ISREG(ist.st_mode)) {

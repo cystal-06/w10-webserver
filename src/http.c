@@ -82,8 +82,8 @@ int http_parse_request(int client_fd, HttpRequest *req) {
 
     snprintf(req->first_line, sizeof(req->first_line), "%s", line);
 
-    char method_str[32], uri_str[URI_MAX_LEN], ver_str[32];
-    int parsed = sscanf(line, "%31s %2047s %31s", method_str, uri_str, ver_str);
+    char method_str[16], uri_str[URI_MAX_LEN], ver_str[16];
+    int parsed = sscanf(line, "%15s %2047s %15s", method_str, uri_str, ver_str);
     if (parsed < 2) {
         return 400;
     }

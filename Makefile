@@ -7,7 +7,7 @@
 
 CC      ?= gcc
 CFLAGS  += -Wall -Wextra -Werror -pedantic -std=c99 \
-           -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700
+           -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700 -D_DEFAULT_SOURCE -D_BSD_SOURCE
 LDFLAGS += -lmagic
 
 SRCDIR  := src
