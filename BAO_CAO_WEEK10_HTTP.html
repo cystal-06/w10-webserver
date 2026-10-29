@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>BÁO CÁO THỰC HÀNH WEEK 10: HTTP</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 20mm 20mm 20mm;
+  }
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 13pt;
+    line-height: 1.35;
+    color: #000;
+    margin: 0 auto;
+    padding: 20px;
+    max-width: 750px;
+  }
+  .title-wrapper {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .title {
+    display: inline-block;
+    background-color: #ffff00;
+    font-weight: bold;
+    font-size: 15pt;
+    padding: 3px 8px;
+    text-transform: uppercase;
+  }
+  .info {
+    margin-bottom: 18px;
+    line-height: 1.4;
+  }
+  h2 {
+    font-size: 13pt;
+    font-weight: bold;
+    margin-top: 16px;
+    margin-bottom: 6px;
+  }
+  h3 {
+    font-size: 13pt;
+    font-weight: bold;
+    margin-top: 12px;
+    margin-bottom: 4px;
+  }
+  p {
+    margin: 4px 0;
+  }
+  .code-block {
+    background-color: #f4f4f4;
+    border-left: 3px solid #333;
+    padding: 6px 10px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11pt;
+    margin: 6px 0;
+    white-space: pre-wrap;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 12px 0;
+    font-size: 12pt;
+  }
+  table, th, td {
+    border: 1px solid #000;
+  }
+  th {
+    background-color: #f2f2f2;
+    padding: 6px 8px;
+    text-align: left;
+    font-weight: bold;
+  }
+  td {
+    padding: 5px 8px;
+  }
+  .img-box {
+    border: 1.5px dashed #666;
+    background-color: #fafafa;
+    min-height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #555;
+    font-style: italic;
+    font-size: 11.5pt;
+    margin: 10px 0 4px 0;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .img-desc {
+    font-size: 11.5pt;
+    margin-bottom: 18px;
+  }
+  ul {
+    margin: 4px 0 10px 0;
+    padding-left: 22px;
+  }
+  li {
+    margin-bottom: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="title-wrapper">
+  <div class="title">BÁO CÁO THỰC HÀNH WEEK 10: HTTP</div>
+</div>
+
+<div class="info">
+  <p><strong>Họ và tên:</strong> Nguyễn Công Đức</p>
+  <p><strong>Lớp:</strong> 24SE1</p>
+  <p><strong>MSSV:</strong> 24IT340</p>
+  <p><strong>Môi trường:</strong> Arch Linux, terminal.</p>
+</div>
+
+<!-- MỤC 1 -->
+<h2>1. Gửi HTTP request thủ công bằng telnet (Slide 5–14)</h2>
+<p><strong>Câu lệnh:</strong></p>
+<div class="code-block">telnet www.google.com 80</div>
+
+<p><strong>Sau khi kết nối, gõ:</strong></p>
+<div class="code-block">GET / HTTP/1.0
+If-Modified-Since: Mon, 13 Nov 2023 18:03:39 GMT
+User-Agent: NguyenCongDuc-24SE1-24IT340</div>
+<p><em>Nhấn Enter 2 lần.</em></p>
+
+<p><strong>Cấu trúc request (theo slide 6–10):</strong></p>
+<table>
+  <tr>
+    <th style="width: 35%;">Thành phần</th>
+    <th>Giá trị</th>
+  </tr>
+  <tr>
+    <td><strong>Request method</strong></td>
+    <td>GET</td>
+  </tr>
+  <tr>
+    <td><strong>URI</strong></td>
+    <td>/</td>
+  </tr>
+  <tr>
+    <td><strong>Protocol version</strong></td>
+    <td>HTTP/1.0</td>
+  </tr>
+  <tr>
+    <td><strong>Request modifiers</strong></td>
+    <td>If-Modified-Since: Mon, 13 Nov 2023 18:03:39 GMT</td>
+  </tr>
+  <tr>
+    <td><strong>Client information</strong></td>
+    <td>User-Agent: NguyenCongDuc-24SE1-24IT340</td>
+  </tr>
+</table>
+
+<p><strong>Cấu trúc response (theo slide 11–14):</strong></p>
+<table>
+  <tr>
+    <th style="width: 35%;">Thành phần</th>
+    <th>Giá trị</th>
+  </tr>
+  <tr>
+    <td><strong>Status line</strong></td>
+    <td>HTTP/1.0 200 OK</td>
+  </tr>
+  <tr>
+    <td><strong>Server information</strong></td>
+    <td>Server: gws</td>
+  </tr>
+  <tr>
+    <td><strong>Entity meta-information</strong></td>
+    <td>Content-Type: text/html; charset=ISO-8859-1, Date: ...</td>
+  </tr>
+  <tr>
+    <td><strong>Content</strong></td>
+    <td>&lt;!doctype html&gt;&lt;html...</td>
+  </tr>
+</table>
+
+<div class="img-box">
+  [DÁN ẢNH CHỤP TERMINAL VÀO ĐÂY]
+</div>
+<p class="img-desc"><strong>Nội dung hình:</strong> Terminal hiển thị lệnh <code>telnet www.google.com 80</code>, request GET gửi đi (có header User-Agent: NguyenCongDuc-24SE1-24IT340), và response HTTP/1.0 200 OK với các header Date, Server, Content-Type, cùng nội dung HTML.</p>
+
+<!-- MỤC 2 -->
+<h2>2. Quan sát status code (Slide 15–17)</h2>
+
+<h3>2.1. Redirect 301 (nhóm 3xx)</h3>
+<p><strong>Câu lệnh:</strong></p>
+<div class="code-block">telnet www.stevens.edu 80</div>
+
+<p><strong>Gõ:</strong></p>
+<div class="code-block">GET / HTTP/1.1
+Host: www.stevens.edu</div>
+<p><em>Nhấn Enter 2 lần.</em></p>
+
+<p><strong>Kết quả mong đợi:</strong> HTTP/1.1 301 Moved Permanently với Location: https://www.stevens.edu/.</p>
+
+<div class="img-box">
+  [DÁN ẢNH CHỤP TERMINAL VÀO ĐÂY]
+</div>
+<p class="img-desc"><strong>Nội dung hình:</strong> Terminal hiển thị response HTTP/1.1 301 Moved Permanently, header Location: https://www.stevens.edu/, Server: cloudflare.</p>
+
+<h3>2.2. HTTPS bằng openssl s_client (nhóm 2xx)</h3>
+<p><strong>Câu lệnh:</strong></p>
+<div class="code-block">openssl s_client -crlf -servername www.stevens.edu -connect www.stevens.edu:443</div>
+
+<p><strong>Gõ:</strong></p>
+<div class="code-block">GET / HTTP/1.1
+Host: www.stevens.edu</div>
+<p><em>Nhấn Enter 2 lần.</em></p>
+
+<p><strong>Kết quả mong đợi:</strong> HTTP/1.1 200 OK qua TLS.</p>
+
+<div class="img-box">
+  [DÁN ẢNH CHỤP TERMINAL VÀO ĐÂY]
+</div>
+<p class="img-desc"><strong>Nội dung hình:</strong> Terminal hiển thị response HTTP/1.1 200 OK, header Content-Type: text/html; charset=utf-8, Strict-Transport-Security.</p>
+
+<p><strong>Bảng status code (slide 15):</strong></p>
+<table>
+  <tr>
+    <th style="width: 25%;">Nhóm</th>
+    <th>Ý nghĩa</th>
+  </tr>
+  <tr>
+    <td><strong>1xx</strong></td>
+    <td>Informational; Request received, continuing process</td>
+  </tr>
+  <tr>
+    <td><strong>2xx</strong></td>
+    <td>Success; Action received, understood, accepted</td>
+  </tr>
+  <tr>
+    <td><strong>3xx</strong></td>
+    <td>Redirection; Further action needed</td>
+  </tr>
+  <tr>
+    <td><strong>4xx</strong></td>
+    <td>Client Error; Bad syntax or cannot be fulfilled</td>
+  </tr>
+  <tr>
+    <td><strong>5xx</strong></td>
+    <td>Server Error; Server failed to fulfill valid request</td>
+  </tr>
+</table>
+
+<!-- MỤC 3 -->
+<h2>3. HTTP là Transfer Protocol (Slide 18–19)</h2>
+
+<h3>3.1. Gửi Accept header</h3>
+<p><strong>Câu lệnh:</strong></p>
+<div class="code-block">telnet www.google.com 80</div>
+
+<p><strong>Gõ:</strong></p>
+<div class="code-block">GET / HTTP/1.0
+Accept: application/json
+User-Agent: NguyenCongDuc-24IT340</div>
+<p><em>Nhấn Enter 2 lần.</em></p>
+
+<p><strong>Giải thích (slide 18):</strong> Client header Accept/Accept-Encoding chỉ định định dạng (application/json) hoặc encoding (gzip, Brotli); server trả Content-Type và Content-Encoding tương ứng.</p>
+
+<div class="img-box">
+  [DÁN ẢNH CHỤP TERMINAL VÀO ĐÂY]
+</div>
+<p class="img-desc"><strong>Nội dung hình:</strong> Terminal hiển thị request có header Accept: application/json và User-Agent: NguyenCongDuc-24IT340.</p>
+
+<h3>3.2. Kiểm tra CGI (slide 19, 22)</h3>
+<p><strong>Câu lệnh:</strong></p>
+<div class="code-block">curl -v https://www.netmeister.org/cgi-bin/env.cgi</div>
+
+<p><strong>Giải thích (slide 19):</strong> CGI – resource được thực thi, cần sinh response header phù hợp (server-side scripting).</p>
+
+<div class="img-box">
+  [DÁN ẢNH CHỤP TERMINAL VÀO ĐÂY]
+</div>
+<p class="img-desc"><strong>Nội dung hình:</strong> Terminal hiển thị response từ CGI script env.cgi, bao gồm các biến môi trường HTTP.</p>
+
+<!-- MỤC 4 -->
+<h2>4. So sánh HTTP/1.0 và HTTP/1.1 (Slide 20)</h2>
+<p><strong>Câu lệnh:</strong></p>
+<div class="code-block">curl -I --http1.0 https://www.google.com
+curl -I --http1.1 https://www.google.com</div>
+
+<p><strong>Đặc điểm HTTP/1.0 (slide 20):</strong></p>
+<ul>
+  <li>Protocol versions: 1.0</li>
+  <li>Request methods: GET, HEAD</li>
+  <li>Request headers: If-Modified-Since</li>
+  <li>Response headers: Date, Server, Last-Modified, Content-Type, Content-Length</li>
+</ul>
+
+<div class="img-box">
+  [DÁN ẢNH CHỤP TERMINAL VÀO ĐÂY]
+</div>
+<p class="img-desc"><strong>Nội dung hình:</strong> Terminal hiển thị header response của HTTP/1.0 và HTTP/1.1, so sánh Date, Server, Content-Type, Content-Length.</p>
+
+</body>
+</html>

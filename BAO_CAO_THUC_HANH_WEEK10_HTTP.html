@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>BÁO CÁO THỰC HÀNH TUẦN 10: GIAO THỨC HTTP</title>
+<style>
+  body {
+    font-family: 'Liberation Serif', 'Times New Roman', serif;
+    font-size: 13pt;
+    line-height: 1.5;
+    margin: 40px auto;
+    max-width: 800px;
+    color: #111;
+  }
+  h1 {
+    text-align: center;
+    font-size: 18pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 25px;
+    color: #0b3d91;
+    border-bottom: 2px solid #0b3d91;
+    padding-bottom: 8px;
+  }
+  h2 {
+    font-size: 14pt;
+    font-weight: bold;
+    color: #1a5276;
+    margin-top: 25px;
+    margin-bottom: 10px;
+    border-left: 4px solid #1a5276;
+    padding-left: 8px;
+  }
+  h3 {
+    font-size: 13pt;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-top: 15px;
+    margin-bottom: 8px;
+  }
+  .info-box {
+    background-color: #f8f9fa;
+    border: 1px solid #dcdcdc;
+    padding: 12px 18px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+  }
+  .info-box p {
+    margin: 4px 0;
+  }
+  pre, code {
+    font-family: 'Liberation Mono', 'Courier New', monospace;
+    font-size: 11pt;
+  }
+  pre {
+    background-color: #272822;
+    color: #f8f8f2;
+    padding: 10px 14px;
+    border-radius: 4px;
+    overflow-x: auto;
+    line-height: 1.35;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+  }
+  table, th, td {
+    border: 1px solid #7f8c8d;
+  }
+  th {
+    background-color: #eaecee;
+    font-weight: bold;
+    padding: 8px;
+    text-align: left;
+  }
+  td {
+    padding: 7px 10px;
+  }
+  .image-placeholder {
+    border: 2px dashed #e67e22;
+    background-color: #fef9e7;
+    padding: 28px 15px;
+    text-align: center;
+    margin: 18px 0 6px 0;
+    border-radius: 6px;
+    color: #d35400;
+    font-weight: bold;
+  }
+  .image-caption {
+    text-align: center;
+    font-style: italic;
+    font-size: 11pt;
+    color: #555;
+    margin-bottom: 20px;
+  }
+  .guide-box {
+    background-color: #eaf2f8;
+    border-left: 4px solid #2980b9;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 11.5pt;
+  }
+  .guide-box ul {
+    margin: 4px 0;
+    padding-left: 20px;
+  }
+  .highlight {
+    background-color: #fcf3cf;
+    padding: 2px 4px;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<h1>BÁO CÁO THỰC HÀNH TUẦN 10: GIAO THỨC HTTP</h1>
+
+<div class="info-box">
+  <p><strong>Họ và tên:</strong> Nguyễn Công Đức</p>
+  <p><strong>Lớp:</strong> 24SE1</p>
+  <p><strong>Mã số sinh viên (MSSV):</strong> 24IT340</p>
+  <p><strong>Môi trường thực hành:</strong> Linux Terminal (Arch Linux, GNOME)</p>
+</div>
+
+<!-- ======================================================== -->
+<h2>1. Gửi HTTP Request thủ công qua Telnet</h2>
+
+<p><strong>Mục tiêu:</strong> Kết nối trực tiếp đến Web Server trên cổng TCP 80, tự tay soạn thảo bản tin HTTP/1.0 Request và phân tích cấu trúc phản hồi HTTP Response.</p>
+
+<p><strong>Lệnh kết nối:</strong></p>
+<pre>telnet www.google.com 80</pre>
+
+<p><strong>Soạn nội dung Request (gõ trực tiếp vào terminal):</strong></p>
+<pre>GET / HTTP/1.0
+If-Modified-Since: Thu, 29 Oct 2026 00:00:00 GMT
+User-Agent: NguyenCongDuc-24SE1-24IT340
+
+</pre>
+<p><em>(Chú ý: Sau dòng User-Agent, nhấn phím <strong>Enter 2 lần</strong> để báo hiệu kết thúc phần HTTP Header).</em></p>
+
+<h3>Phân tích thành phần bản tin HTTP Request:</h3>
+<table>
+  <tr>
+    <th style="width: 30%;">Thành phần</th>
+    <th>Giá trị thực tế</th>
+    <th>Ý nghĩa kỹ thuật</th>
+  </tr>
+  <tr>
+    <td><strong>Request Method</strong></td>
+    <td><code>GET</code></td>
+    <td>Phương thức yêu cầu tài nguyên từ máy chủ</td>
+  </tr>
+  <tr>
+    <td><strong>URI</strong></td>
+    <td><code>/</code></td>
+    <td>Tài nguyên gốc (Root document)</td>
+  </tr>
+  <tr>
+    <td><strong>Protocol Version</strong></td>
+    <td><code>HTTP/1.0</code></td>
+    <td>Phiên bản giao thức HTTP sử dụng</td>
+  </tr>
+  <tr>
+    <td><strong>Request Modifiers</strong></td>
+    <td><code>If-Modified-Since: Thu, 29 Oct 2026 00:00:00 GMT</code></td>
+    <td>Header điều kiện: chỉ tải trang nếu có sửa đổi sau thời điểm này</td>
+  </tr>
+  <tr>
+    <td><strong>Client Information</strong></td>
+    <td><code>User-Agent: NguyenCongDuc-24SE1-24IT340</code></td>
+    <td>Định danh thông tin client gửi yêu cầu (tên và MSSV sinh viên)</td>
+  </tr>
+</table>
+
+<h3>Phân tích thành phần bản tin HTTP Response nhận được:</h3>
+<table>
+  <tr>
+    <th style="width: 30%;">Thành phần Response</th>
+    <th>Giá trị ghi nhận</th>
+    <th>Giải thích</th>
+  </tr>
+  <tr>
+    <td><strong>Status Line</strong></td>
+    <td><code>HTTP/1.0 200 OK</code></td>
+    <td>Thực thi thành công, tài nguyên hợp lệ</td>
+  </tr>
+  <tr>
+    <td><strong>Server Information</strong></td>
+    <td><code>Server: gws</code></td>
+    <td>Web server Google (Google Web Server)</td>
+  </tr>
+  <tr>
+    <td><strong>Entity Meta-Information</strong></td>
+    <td><code>Content-Type: text/html; charset=ISO-8859-1</code><br><code>Date: Thu, 29 Oct 2026 ...</code></td>
+    <td>Định dạng tài nguyên trả về là HTML và thời gian phản hồi theo chuẩn GMT</td>
+  </tr>
+  <tr>
+    <td><strong>Content Body</strong></td>
+    <td><code>&lt;!doctype html&gt;...</code></td>
+    <td>Mã nguồn HTML trang chủ Google</td>
+  </tr>
+</table>
+
+<div class="image-placeholder">
+  [CHÈN ẢNH CHỤP TERMINAL 1 TẠI ĐÂY]<br>
+  (Chụp toàn bộ màn hình Terminal chứa lệnh telnet, request với tên Nguyễn Công Đức và response 200 OK)
+</div>
+<div class="image-caption">Hình 1: Thao tác gửi bản tin HTTP/1.0 thủ công bằng Telnet và kết quả phản hồi từ Google Server</div>
+
+<!-- ======================================================== -->
+<h2>2. Khảo sát các nhóm Status Code trong HTTP</h2>
+
+<h3>2.1. Phản hồi chuyển hướng Redirect 301 (Nhóm 3xx)</h3>
+<p><strong>Mục tiêu:</strong> Kiểm tra hành vi chuyển hướng khi truy cập vào cổng HTTP không mã hóa của máy chủ yêu cầu HTTPS.</p>
+
+<p><strong>Lệnh kết nối:</strong></p>
+<pre>telnet www.stevens.edu 80</pre>
+
+<p><strong>Nội dung Request:</strong></p>
+<pre>GET / HTTP/1.1
+Host: www.stevens.edu
+
+</pre>
+
+<p><strong>Kết quả phân tích:</strong> Server trả về mã <code>HTTP/1.1 301 Moved Permanently</code> kèm tiêu đề <code>Location: https://www.stevens.edu/</code> thông báo trang web đã chuyển sang giao thức bảo mật HTTPS.</p>
+
+<div class="image-placeholder">
+  [CHÈN ẢNH CHỤP TERMINAL 2 TẠI ĐÂY]<br>
+  (Chụp kết quả trả về mã 301 Moved Permanently và trường Location)
+</div>
+<div class="image-caption">Hình 2: Phản hồi mã trạng thái 301 Moved Permanently từ máy chủ Stevens Institute</div>
+
+<h3>2.2. Kết nối HTTPS bằng OpenSSL s_client (Nhóm 2xx)</h3>
+<p><strong>Mục tiêu:</strong> Thiết lập phiên kết nối TLS/SSL bảo mật qua cổng 443 và kiểm tra mã thành công 200 OK.</p>
+
+<p><strong>Lệnh kết nối:</strong></p>
+<pre>openssl s_client -servername www.stevens.edu -connect www.stevens.edu:443</pre>
+
+<p><strong>Gửi Request sau khi bắt tay TLS hoàn tất:</strong></p>
+<pre>GET / HTTP/1.1
+Host: www.stevens.edu
+
+</pre>
+
+<p><strong>Kết quả:</strong> Sau quá trình trao đổi chứng chỉ bảo mật (Certificate Verification), gửi request HTTP/1.1 nhận được phản hồi <code>HTTP/1.1 200 OK</code> với <code>Server: cloudflare</code>.</p>
+
+<div class="image-placeholder">
+  [CHÈN ẢNH CHỤP TERMINAL 3 TẠI ĐÂY]<br>
+  (Chụp kết quả bắt tay TLS thành công và phản hồi HTTP/1.1 200 OK)
+</div>
+<div class="image-caption">Hình 3: Kết nối bảo mật HTTPS qua openssl s_client nhận trạng thái 200 OK</div>
+
+<h3>2.3. Bảng tổng hợp phân loại mã trạng thái HTTP</h3>
+<table>
+  <tr>
+    <th style="width: 15%;">Nhóm mã</th>
+    <th style="width: 25%;">Tên phân loại</th>
+    <th style="width: 35%;">Ý nghĩa</th>
+    <th style="width: 25%;">Ví dụ điển hình</th>
+  </tr>
+  <tr>
+    <td><strong>1xx</strong></td>
+    <td>Informational</td>
+    <td>Yêu cầu đã được tiếp nhận, đang tiếp tục xử lý</td>
+    <td>100 Continue</td>
+  </tr>
+  <tr>
+    <td><strong>2xx</strong></td>
+    <td>Success</td>
+    <td>Yêu cầu đã được nhận, hiểu và chấp thuận thành công</td>
+    <td>200 OK, 204 No Content</td>
+  </tr>
+  <tr>
+    <td><strong>3xx</strong></td>
+    <td>Redirection</td>
+    <td>Cần hành động chuyển tiếp để hoàn thành yêu cầu</td>
+    <td>301 Moved Permanently, 304 Not Modified</td>
+  </tr>
+  <tr>
+    <td><strong>4xx</strong></td>
+    <td>Client Error</td>
+    <td>Lỗi do phía client (sai cú pháp hoặc không hợp lệ)</td>
+    <td>400 Bad Request, 403 Forbidden, 404 Not Found</td>
+  </tr>
+  <tr>
+    <td><strong>5xx</strong></td>
+    <td>Server Error</td>
+    <td>Lỗi từ phía máy chủ khi cố gắng thực thi yêu cầu</td>
+    <td>500 Internal Server Error, 502 Bad Gateway</td>
+  </tr>
+</table>
+
+<!-- ======================================================== -->
+<h2>3. Khảo sát cơ chế Transfer Protocol và CGI</h2>
+
+<h3>3.1. Thương lượng định dạng tài nguyên với header Accept</h3>
+<p><strong>Mục tiêu:</strong> Quan sát cơ chế Content Negotiation khi client chỉ định loại nội dung mong muốn nhận từ server.</p>
+
+<p><strong>Lệnh kết nối:</strong></p>
+<pre>telnet www.google.com 80</pre>
+
+<p><strong>Nội dung Request:</strong></p>
+<pre>GET / HTTP/1.0
+Accept: application/json
+User-Agent: NguyenCongDuc-24IT340
+
+</pre>
+
+<p><strong>Phân tích:</strong> Client gửi thông điệp yêu cầu định dạng JSON (<code>Accept: application/json</code>). Server xem xét khả năng đáp ứng và trả về định dạng phù hợp nhất qua tiêu đề <code>Content-Type</code>.</p>
+
+<div class="image-placeholder">
+  [CHÈN ẢNH CHỤP TERMINAL 4 TẠI ĐÂY]<br>
+  (Chụp request có chứa header Accept: application/json và User-Agent của sinh viên)
+</div>
+<div class="image-caption">Hình 4: Cơ chế thương lượng nội dung thông qua trường tiêu đề Accept</div>
+
+<h3>3.2. Kiểm tra thực thi kịch bản CGI (Common Gateway Interface)</h3>
+<p><strong>Mục tiêu:</strong> Thực thi một tài nguyên động phía máy chủ (Server-side dynamic resource) và phân tích các biến môi trường được truyền qua CGI.</p>
+
+<p><strong>Lệnh kiểm tra:</strong></p>
+<pre>curl -v https://www.netmeister.org/cgi-bin/env.cgi</pre>
+
+<p><strong>Phân tích kết quả:</strong> Kịch bản <code>env.cgi</code> trên máy chủ được thực thi theo chuẩn RFC 3875, tự động trích xuất các thông tin kết nối và trả về danh sách biến môi trường HTTP (như <code>REQUEST_METHOD=GET</code>, <code>REMOTE_ADDR</code>, <code>HTTP_USER_AGENT</code>, <code>SERVER_PROTOCOL=HTTP/2</code>).</p>
+
+<div class="image-placeholder">
+  [CHÈN ẢNH CHỤP TERMINAL 5 TẠI ĐÂY]<br>
+  (Chụp terminal hiển thị các dòng biến môi trường CGI trả về từ env.cgi)
+</div>
+<div class="image-caption">Hình 5: Kết quả thực thi chương trình CGI env.cgi hiển thị các biến môi trường hệ thống</div>
+
+<!-- ======================================================== -->
+<h2>4. So sánh thực nghiệm giữa HTTP/1.0 và HTTP/1.1</h2>
+
+<p><strong>Mục tiêu:</strong> Sử dụng công cụ <code>curl</code> để gửi yêu cầu lấy tiêu đề (HEAD request) theo cả hai phiên bản giao thức và đối chiếu sự khác biệt.</p>
+
+<p><strong>Lệnh thực nghiệm:</strong></p>
+<pre># Kiểm tra phiên bản HTTP/1.0:
+curl -I --http1.0 https://www.google.com
+
+# Kiểm tra phiên bản HTTP/1.1:
+curl -I --http1.1 https://www.google.com</pre>
+
+<h3>Bảng đối chiếu đặc tính kỹ thuật giữa HTTP/1.0 và HTTP/1.1:</h3>
+<table>
+  <tr>
+    <th style="width: 25%;">Tiêu chí</th>
+    <th style="width: 35%;">HTTP/1.0 (RFC 1945)</th>
+    <th style="width: 40%;">HTTP/1.1 (RFC 2616 / RFC 7230)</th>
+  </tr>
+  <tr>
+    <td><strong>Kết nối TCP (Connection)</strong></td>
+    <td>Đóng kết nối sau mỗi request (Non-persistent). Mỗi tài nguyên mở 1 kết nối mới.</td>
+    <td>Mặc định duy trì kết nối (Persistent Connection - Keep-Alive), hỗ trợ Pipelining.</td>
+  </tr>
+  <tr>
+    <td><strong>Tiêu đề Host</strong></td>
+    <td>Không bắt buộc (gây khó khăn cho cơ chế máy chủ ảo Virtual Hosting).</td>
+    <td>Bắt buộc phải có trường <code>Host:</code> trong mọi request.</td>
+  </tr>
+  <tr>
+    <td><strong>Truyền dữ liệu (Transfer)</strong></td>
+    <td>Dựa vào <code>Content-Length</code> cố định.</td>
+    <td>Hỗ trợ <code>Transfer-Encoding: chunked</code> (truyền theo từng khối linh hoạt).</td>
+  </tr>
+  <tr>
+    <td><strong>Cơ chế Cache</strong></td>
+    <td>Cơ bản thông qua <code>If-Modified-Since</code>, <code>Expires</code>.</td>
+    <td>Mở rộng mạnh mẽ với <code>Cache-Control</code>, <code>ETag</code>, <code>If-None-Match</code>.</td>
+  </tr>
+</table>
+
+<div class="image-placeholder">
+  [CHÈN ẢNH CHỤP TERMINAL 6 TẠI ĐÂY]<br>
+  (Chụp màn hình so sánh 2 kết quả trả về của curl --http1.0 và curl --http1.1)
+</div>
+<div class="image-caption">Hình 6: So sánh tiêu đề phản hồi thực tế giữa giao thức HTTP/1.0 và HTTP/1.1</div>
+
+</body>
+</html>

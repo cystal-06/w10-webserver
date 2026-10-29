@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>BÁO CÁO ĐẶC TẢ HỆ THỐNG - SWS WEB SERVER</title>
+<style>
+  @page { size: A4; margin: 20mm; }
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 13pt;
+    line-height: 1.4;
+    color: #111;
+  }
+  h1 { font-size: 16pt; font-weight: bold; text-align: center; color: #003366; text-transform: uppercase; margin-bottom: 5px; }
+  h2 { font-size: 14pt; font-weight: bold; color: #004080; border-bottom: 1.5px solid #004080; padding-bottom: 4px; margin-top: 25px; }
+  h3 { font-size: 13pt; font-weight: bold; color: #1a5276; margin-top: 18px; }
+  h4 { font-size: 12.5pt; font-weight: bold; color: #2c3e50; margin-top: 14px; }
+  p { margin: 6px 0; text-align: justify; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 11.5pt; }
+  table, th, td { border: 1px solid #333; }
+  th { background-color: #f2f4f4; padding: 6px 8px; font-weight: bold; text-align: left; }
+  td { padding: 6px 8px; vertical-align: top; }
+  pre {
+    background-color: #f8f9fa;
+    border: 1px solid #ccc;
+    border-left: 4px solid #004080;
+    padding: 8px 12px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10.5pt;
+    overflow-x: auto;
+  }
+  code { font-family: 'Courier New', Courier, monospace; font-size: 11pt; background-color: #f0f0f0; padding: 1px 3px; }
+  ul, ol { margin: 6px 0; padding-left: 24px; }
+  li { margin-bottom: 3px; text-align: justify; }
+  hr { border: 0; border-top: 1px solid #bbb; margin: 20px 0; }
+</style>
+</head>
+<body>
+<h1>BÁO CÁO ĐẶC TẢ HỆ THỐNG & CƠ SỞ KỸ THUẬT (SYSTEM SPECIFICATION DOCUMENT - SSD)</h1>
+<h2>ĐỒ ÁN NHÓM: THIẾT KẾ VÀ XÂY DỰNG MÁY CHỦ WEB ĐƠN GIẢN (SWS - SIMPLE WEB SERVER)</h2>
+<ul><li><strong>Học phần:</strong> CS631 -- Advanced Programming in the UNIX Environment</li></ul>
+<ul><li><strong>Đề tài:</strong> Group Project: Write a simple web server (<code>sws</code>)</li></ul>
+<ul><li><strong>Tiêu chuẩn tham chiếu:</strong> RFC 1945 (HTTP/1.0), RFC 3875 (CGI/1.1), POSIX.1-2008, NetBSD manual <code>sws(1)</code></li></ul>
+<ul><li><strong>Nền tảng mục tiêu:</strong> NetBSD 11.0 (chuẩn tham chiếu), Linux (Ubuntu/Arch), OmniOS</li></ul>
+<ul><li><strong>Sinh viên thực hiện:</strong> Nguyễn Công Đức (MSSV: 24IT340, Lớp: 24SE1) & Nhóm sinh viên</li></ul>
+<hr>
+<h2>PHẦN 1: TỔNG QUAN ĐỀ TÀI & PHÂN TÍCH YÊU CẦU (OVERVIEW & REQUIREMENTS)</h2>
+<h3>1.1. Bối cảnh và Mục tiêu Đề tài</h3>
+<p>Trong kiến trúc hệ điều hành UNIX/Linux, máy chủ web (Web Server) là một dịch vụ hệ thống (System Daemon) chạy ngầm, tiếp nhận và phản hồi các yêu cầu từ mạng thông qua giao thức HTTP. Dự án yêu cầu nhóm thiết kế và hiện thực hóa chương trình máy chủ <code>sws</code> (Simple Web Server) hoàn chỉnh bằng ngôn ngữ C, tương tác trực tiếp với tầng giao vận thông qua Socket API (<code>socket</code>, <code>bind</code>, <code>listen</code>, <code>accept</code>), quản trị tiến trình qua <code>fork</code>, <code>setsid</code> và giao tiếp liên tiến trình qua <code>pipe</code>.</p>
+<p><strong>Mục tiêu cốt lõi:</strong></p>
+<ol><li>Tuân thủ nghiêm ngặt chuẩn <strong>HTTP/1.0 (RFC 1945)</strong>, chỉ chấp nhận Relative URI, hỗ trợ các phương thức <code>GET</code> và <code>HEAD</code>.</li></ol>
+<ol><li>Khả năng tương thích ngược: Tiếp nhận các yêu cầu <code>HTTP/1.1</code> từ trình duyệt hiện đại và tự động hạ cấp xử lý như <code>HTTP/1.0</code>.</li></ol>
+<ol><li>Hoạt động như một <strong>System Daemon</strong> chuẩn mực: tách khỏi Terminal, chạy nền, hỗ trợ đa kết nối đồng thời.</li></ol>
+<ol><li>Tích hợp giao diện cổng kết nối chung <strong>CGI/1.1 (RFC 3875)</strong> để chạy mã kịch bản động từ phía máy chủ.</li></ol>
+<ol><li>Đảm bảo tính khả chuyển (Portability) trên 3 hệ thống: NetBSD 11.0, Linux và OmniOS.</li></ol>
+<hr>
+<h3>1.2. Danh sách Yêu cầu Chức năng (Functional Requirements - FR)</h3>
+<p>Cú pháp thực thi dòng lệnh của chương trình:</p>
+<pre><code>sws [-dh] [-c dir] [-i address] [-l file] [-p port] dir</code></pre>
+<ul><li><strong>[FR-01] Quản trị Tham số Dòng lệnh & Chế độ Chạy:</strong></li></ul>
+<ul><li><code>dir</code> (bắt buộc): Đường dẫn thư mục gốc chứa tài liệu phục vụ web (Document Root).</li></ul>
+<ul><li><code>-h</code>: Hiển thị tóm tắt hướng dẫn sử dụng và thoát với mã 0.</li></ul>
+<ul><li><code>-d</code>: Bật chế độ gỡ lỗi (Debugging Mode). Máy chủ <strong>không</strong> biến thành Daemon, chạy trực tiếp trên foreground của terminal, chỉ chấp nhận <strong>1 kết nối tuần tự tại một thời điểm</strong>, toàn bộ log được in trực tiếp ra <code>stdout</code>.</li></ul>
+<ul><li>Mặc định (không có <code>-d</code>): Biến thành System Daemon, chạy ngầm dưới nền, ngắt liên kết terminal, sẵn sàng tiếp nhận nhiều kết nối đồng thời.</li></ul>
+<ul><li><strong>[FR-02] Khởi tạo Socket & Lắng nghe Mạng (Network Binding):</strong></li></ul>
+<ul><li>Mặc định lắng nghe trên cổng TCP <code>8080</code>. Cho phép đổi cổng qua <code>-p port</code>.</li></ul>
+<ul><li>Mặc định lắng nghe đồng thời trên toàn bộ các địa chỉ IPv4 (<code>INADDR_ANY</code> - <code>0.0.0.0</code>) và IPv6 (<code>in6addr_any</code> - <code>::</code>). Cho phép ràng buộc địa chỉ cụ thể qua <code>-i address</code>.</li></ul>
+<ul><li><strong>[FR-03] Xử lý Yêu cầu HTTP/1.0 (RFC 1945):</strong></li></ul>
+<ul><li>Chỉ chấp nhận Relative URI (RFC 1945, Section 3.2.1).</li></ul>
+<ul><li>Hỗ trợ phương thức <code>GET</code>: Trả về khối Headers và toàn bộ nội dung file (Entity Body).</li></ul>
+<ul><li>Hỗ trợ phương thức <code>HEAD</code>: Chỉ trả về khối Headers phản hồi, không kèm theo Body.</li></ul>
+<ul><li>Sau khi phục vụ xong yêu cầu, đóng kết nối TCP ngay lập tức.</li></ul>
+<ul><li><strong>[FR-04] Xử lý Tiêu đề Điều kiện <code>If-Modified-Since</code> (Caching Mechanism):</strong></li></ul>
+<ul><li>Đọc và phân tích thời gian trong tiêu đề <code>If-Modified-Since</code> của client.</li></ul>
+<ul><li>Nếu file trên máy chủ không bị chỉnh sửa sau mốc thời gian này, máy chủ phản hồi mã <code>304 Not Modified</code> và không gửi dữ liệu file.</li></ul>
+<ul><li><strong>[FR-05] Tự động Sinh Chỉ mục Thư mục (Directory Indexing):</strong></li></ul>
+<ul><li>Nếu yêu cầu trỏ tới một thư mục:</li></ul>
+<p>    + Nếu có file <code>index.html</code>: Trả về nội dung file này.</p>
+<p>    + Nếu không có <code>index.html</code>: Máy chủ tự động sinh ra trang mã HTML liệt kê toàn bộ các file và thư mục con bên trong.</p>
+<p>    + Danh sách phải được sắp xếp theo thứ tự chữ cái (Alphanumeric order).</p>
+<p>    + Các file ẩn (bắt đầu bằng dấu chấm <code>.</code>) bắt buộc phải bị loại bỏ.</p>
+<ul><li><strong>[FR-06] Phân giải Thư mục Người dùng (User Directories):</strong></li></ul>
+<ul><li>Nếu URI bắt đầu bằng <code>~<username>/...</code>, máy chủ tự động chuyển hướng phân giải vào thư mục <code>sws</code> trong home của user đó (<code>/home/<username>/sws/...</code>).</li></ul>
+<ul><li><strong>[FR-07] Thực thi Kịch bản CGI (Common Gateway Interface - RFC 3875):</strong></li></ul>
+<ul><li>Kích hoạt khi có cờ <code>-c dir</code> (chỉ định thư mục CGI Root).</li></ul>
+<ul><li>Khi URI bắt đầu bằng <code>/cgi-bin/...</code>, phần còn lại sẽ được phân giải tương đối với thư mục CGI, thực thi script và chuyển tiếp luồng dữ liệu trả về cho client.</li></ul>
+<ul><li><strong>[FR-08] Ghi Nhật ký Truy cập Chuẩn Apache (Logging System):</strong></li></ul>
+<ul><li>Kích hoạt khi có cờ <code>-l file</code>.</li></ul>
+<ul><li>Định dạng từng dòng log theo chuẩn biến thể Apache:</li></ul>
+<p>    <code>%a %t "%r" %>s %b</code></p>
+<p>    (Địa chỉ IP client, Thời gian GMT dạng ISO 8601, Dòng đầu tiên của request trong ngoặc kép, Mã phản hồi HTTP, Số byte dữ liệu trả về).</p>
+<ul><li><strong>[FR-09] Hạ cấp Giao thức Tự động (HTTP/1.1 Downgrade):</strong></li></ul>
+<ul><li>Khi nhận yêu cầu <code>HTTP/1.1</code>, máy chủ tự động phản hồi theo chuẩn <code>HTTP/1.0</code>.</li></ul>
+<hr>
+<h3>1.3. Yêu cầu Phi Chức năng (Non-Functional Requirements - NFR)</h3>
+<ul><li><strong>[NFR-01] Khả năng Xử lý Đa kết nối (Concurrency):</strong> Sử dụng mô hình <code>fork()</code> tạo tiến trình con độc lập phục vụ từng kết nối, xử lý tín hiệu <code>SIGCHLD</code> qua <code>waitpid()</code> tránh hoàn toàn lỗi Zombie Process.</li></ul>
+<ul><li><strong>[NFR-02] An toàn & Bảo mật (Security & Path Traversal):</strong> Sử dụng hàm <code>realpath()</code> để kiểm tra ranh giới, ngăn chặn triệt để hành vi dùng <code>../../</code> để đọc file hệ thống trái phép. Trả về <code>403 Forbidden</code> hoặc <code>404 Not Found</code>.</li></ul>
+<ul><li><strong>[NFR-03] Tính Khả chuyển (Portability):</strong> Viết bằng C99 chuẩn POSIX, biên dịch không lỗi cảnh báo với các cờ: <code>-Wall -Wextra -Werror -pedantic</code>.</li></ul>
+<hr>
+<h2>PHẦN 2: THIẾT KẾ KIẾN TRÚC HỆ THỐNG (SYSTEM ARCHITECTURE)</h2>
+<h3>2.1. Mô hình Tiến trình (Process Lifecycle)</h3>
+<pre><code>                    +-----------------------------+
+                    |        sws (main.c)         |
+                    | - Parse CLI Options (getopt)|
+                    | - Bind Sockets (IPv4/IPv6)  |
+                    | - Daemonize (if not -d)     |
+                    +--------------+--------------+
+                                   |
+                               while(1)
+                                   |
+                      accept(client_connection)
+                                   |
+                    +--------------v--------------+
+                    |       Chế độ thực thi       |
+                    +--------------+--------------+
+                                   |
+            +----------------------+----------------------+
+            | (Chế độ Daemon)                             | (Chế độ Debug -d)
+    fork() tiến trình con                                 Xử lý tuần tự trên
+    Phục vụ client -&gt; exit(0)                             tiến trình chính
+    Tiến trình cha tiếp tục accept                        In log ra stdout</code></pre>
+<hr>
+<h3>2.2. Đặc tả Cấu trúc Dữ liệu Cốt lõi (Data Structures)</h3>
+<h4>1. Cấu trúc Cấu hình Hệ thống (<code>ServerConfig</code>)</h4>
+<pre><code>typedef struct {
+    int port;                  /* Cổng lắng nghe (Mặc định: 8080) */
+    char *bind_ip;             /* Địa chỉ IP ràng buộc (NULL nếu lắng nghe tất cả) */
+    char *doc_root;            /* Thư mục gốc chứa web (Bắt buộc) */
+    char *cgi_dir;             /* Thư mục chứa script CGI (-c) */
+    char *log_file;            /* Đường dẫn file log (-l) */
+    FILE *log_fp;              /* Con trỏ file stream ghi log */
+    int debug_mode;            /* 1: Chế độ Debug (-d), 0: Daemon */
+    int sock_v4;               /* Socket IPv4 */
+    int sock_v6;               /* Socket IPv6 */
+} ServerConfig;</code></pre>
+<h4>2. Cấu trúc Bản tin Yêu cầu (<code>HttpRequest</code>)</h4>
+<pre><code>typedef enum {
+    METHOD_UNSUPPORTED = 0,
+    METHOD_GET,
+    METHOD_HEAD
+} HttpMethod;
+
+typedef struct {
+    HttpMethod method;         /* Phương thức yêu cầu */
+    char raw_method[16];       /* Chuỗi method gốc: &quot;GET&quot;, &quot;HEAD&quot;... */
+    char uri[2048];            /* Đường dẫn URI tài nguyên */
+    char query_string[2048];   /* Chuỗi tham số sau dấu &#x27;?&#x27; (CGI) */
+    char http_version[16];     /* Phiên bản: &quot;HTTP/1.0&quot; hoặc &quot;HTTP/1.1&quot; */
+    char first_line[4096];     /* Dòng đầu tiên của request (ghi log) */
+    time_t if_modified_since;  /* Mốc thời gian If-Modified-Since (-1 nếu không có) */
+    char client_ip[INET6_ADDRSTRLEN]; /* Chuỗi IP máy khách */
+} HttpRequest;</code></pre>
+<h4>3. Cấu trúc Bản tin Phản hồi (<code>HttpResponse</code>)</h4>
+<pre><code>typedef struct {
+    int status_code;           /* Mã trạng thái: 200, 304, 400, 403, 404, 500, 501 */
+    const char *status_phrase; /* Chuỗi giải thích: &quot;OK&quot;, &quot;Not Found&quot;... */
+    char content_type[128];    /* Kiểu MIME: text/html, image/png... (từ libmagic) */
+    off_t content_length;      /* Dung lượng phản hồi tính theo byte */
+    time_t last_modified;      /* Thời điểm sửa đổi file gần nhất */
+    char file_path[PATH_MAX];  /* Đường dẫn vật lý của file trên ổ đĩa */
+} HttpResponse;</code></pre>
+<hr>
+<h3>2.3. Thiết kế Phân rã Module & Hợp đồng Giao tiếp (Module Interfaces)</h3>
+<p>Hệ thống được chia thành 5 module độc lập:</p>
+<ol><li><strong>Module 1: <code>network.h / network.c</code> (Quản trị Mạng):</strong></li></ol>
+<ul><li><code>int network_init(ServerConfig *config);</code>: Mở socket IPv4 và IPv6, gán tùy chọn <code>SO_REUSEADDR</code>, bind địa chỉ và thiết lập chế độ lắng nghe <code>listen()</code>.</li></ul>
+<ul><li><code>int network_accept(const ServerConfig <em>config, struct sockaddr_storage </em>client_addr, socklen_t *addr_len);</code>: Chấp nhận kết nối từ client.</li></ul>
+<ol><li><strong>Module 2: <code>http.h / http.c</code> (Phân tích cú pháp & Giao thức HTTP):</strong></li></ol>
+<ul><li><code>int http_parse_request(int client_fd, HttpRequest *req);</code>: Đọc dữ liệu từ socket, phân tích Request line và Headers.</li></ul>
+<ul><li><code>void http_send_response_headers(int client_fd, const HttpResponse *res);</code>: Gửi các trường tiêu đề chuẩn hóa: <code>Date</code>, <code>Server</code>, <code>Last-Modified</code>, <code>Content-Type</code>, <code>Content-Length</code>.</li></ul>
+<ul><li><code>void http_send_error(int client_fd, int code, const ServerConfig <em>config, const HttpRequest </em>req);</code>: Gửi trang báo lỗi định dạng chuẩn (400, 403, 404, 500, 501).</li></ul>
+<ol><li><strong>Module 3: <code>resource.h / resource.c</code> (Quản lý Tài nguyên & File System):</strong></li></ol>
+<ul><li><code>int resource_resolve_path(const char <em>uri, const ServerConfig </em>config, char *real_path, size_t max_len);</code>: Phân giải URI, kiểm tra bảo mật chống Path Traversal (<code>realpath</code>), xử lý <code>~user</code>.</li></ul>
+<ul><li><code>void resource_get_mime(const char <em>path, char </em>mime_buf, size_t buf_len);</code>: Sử dụng thư viện <code>libmagic</code> (<code>magic_file</code>) để xác định kiểu nội dung của tệp.</li></ul>
+<ul><li><code>int resource_serve_dir_index(int client_fd, const char <em>dir_path, const char </em>uri);</code>: Quét thư mục, sắp xếp chữ cái qua <code>alphasort</code>, lọc bỏ file <code>.dot</code>, tạo mã HTML danh mục gửi về client.</li></ul>
+<ol><li><strong>Module 4: <code>cgi.h / cgi.c</code> (Động cơ Thực thi CGI):</strong></li></ol>
+<ul><li><code>int cgi_execute(int client_fd, const HttpRequest <em>req, const char </em>script_path, const ServerConfig *config);</code>: Tạo pipe, fork tiến trình con, thiết lập các biến môi trường RFC 3875, chuyển hướng luồng I/O và gọi <code>execve</code>.</li></ul>
+<ol><li><strong>Module 5: <code>logger.h / logger.c</code> (Hệ thống Ghi Nhật ký):</strong></li></ol>
+<ul><li><code>void logger_log(const ServerConfig <em>config, const HttpRequest </em>req, int status_code, off_t bytes_sent);</code>: Định dạng và ghi dòng nhật ký theo chuẩn Apache <code>%a %t "%r" %>s %b</code>.</li></ul>
+<hr>
+<h2>PHẦN 3: ĐẶC TẢ CHI TIẾT CÁC THUẬT TOÁN CỐT LÕI</h2>
+<h3>3.1. Thuật toán An toàn Phân giải Đường dẫn (Path Traversal Protection)</h3>
+<p>Để đảm bảo an toàn tuyệt đối cho máy chủ:</p>
+<pre><code>Bước 1: Trích xuất URI, loại bỏ phần tham số sau dấu &#x27;?&#x27;.
+Bước 2: Kiểm tra tiền tố người dùng:
+        Nếu URI bắt đầu bằng &quot;/~&quot;:
+            Lấy username -&gt; gọi getpwnam(username).
+            Ghép đường dẫn: /home/&lt;user&gt;/sws/&lt;subpath&gt;.
+        Ngược lại:
+            Ghép đường dẫn: &lt;doc_root&gt;/&lt;uri&gt;.
+Bước 3: Gọi hàm realpath(target, resolved_path) để giải mã toàn bộ symlink và chuỗi &quot;../&quot;.
+Bước 4: Kiểm tra chuỗi: resolved_path có bắt đầu bằng tiền tố doc_root (hoặc user_sws_dir) không?
+        - Nếu KHÔNG: Từ chối ngay lập tức, trả về lỗi 403 Forbidden.
+        - Nếu CÓ: Tiếp tục kiểm tra stat() xem là file hay thư mục.</code></pre>
+<hr>
+<h3>3.2. Thuật toán Thực thi CGI (RFC 3875)</h3>
+<pre><code>Bước 1: Kiểm tra quyền thực thi của file script qua access(script_path, X_OK).
+        Nếu không có quyền -&gt; Trả về 403 Forbidden.
+Bước 2: Khởi tạo pipe: int pfd[2]; pipe(pfd);
+Bước 3: Gọi fork():
+        - Tiến trình con (Child):
+            + Chuyển hướng stdout sang pfd[1]: dup2(pfd[1], STDOUT_FILENO);
+            + Đóng pfd[0] và pfd[1];
+            + Thiết lập các biến môi trường:
+                REQUEST_METHOD  = req-&gt;raw_method
+                QUERY_STRING    = req-&gt;query_string
+                SCRIPT_NAME     = uri
+                REMOTE_ADDR     = req-&gt;client_ip
+                SERVER_PORT     = config-&gt;port (chuỗi)
+                SERVER_PROTOCOL = &quot;HTTP/1.0&quot;
+                GATEWAY_INTERFACE = &quot;CGI/1.1&quot;
+            + Gọi execve(script_path, argv, envp);
+        - Tiến trình cha (Parent):
+            + Đóng pfd[1];
+            + Gửi Status line: &quot;HTTP/1.0 200 OK\r\n&quot;;
+            + Gửi header Server và Date;
+            + Đọc từ pfd[0] và chuyển tiếp trực tiếp vào socket client_fd cho đến khi hết dữ liệu;
+            + Đóng pfd[0] và gọi waitpid() để thu dọn tiến trình con.</code></pre>
+<hr>
+<h3>3.3. Thuật toán Tự động Sinh Danh mục Thư mục (Directory Indexing)</h3>
+<pre><code>Bước 1: Gọi hàm hệ thống scandir(dir_path, &amp;namelist, NULL, alphasort).
+Bước 2: Bắt đầu tạo mã HTML với tiêu đề: &quot;Index of &lt;URI&gt;&quot;.
+Bước 3: Duyệt qua từng phần tử trong namelist:
+        - Nếu tên file bắt đầu bằng &#x27;.&#x27; (tập tin ẩn) -&gt; Bỏ qua.
+        - Nếu là thư mục con: Hiển thị kèm dấu gạch chéo &#x27;/&#x27; ở cuối.
+        - Tạo thẻ liên kết HTML: &lt;a href=&quot;&lt;filename&gt;&quot;&gt;&lt;filename&gt;&lt;/a&gt;.
+Bước 4: Gửi dữ liệu HTML hoàn chỉnh về client kèm header Content-Type: text/html.
+Bước 5: Giải phóng bộ nhớ namelist đã cấp phát bởi scandir.</code></pre>
+<hr>
+<h3>4.1. Bảng Phân công Nhiệm vụ theo 3 Thành viên & Ràng buộc Kỹ thuật</h3>
+<p>Dự án được phân chia cho đúng <strong>3 thành viên</strong> theo đúng quy định đóng gói <code>user1-user2-user3.tar</code> của đề bài CS631. Trưởng nhóm (<strong>Nguyễn Công Đức</strong>) đảm nhiệm vai trò kiến trúc sư trưởng, chịu trách nhiệm khối lượng công việc lớn nhất (Core Engine, Daemonize, Dual-stack Network và Tích hợp hệ thống):</p>
+<table>
+<tr><th>Thành viên</th><th>Vai trò</th><th>Tỷ trọng</th><th>Phân hệ & Nhiệm vụ cụ thể</th><th>Ràng buộc Kỹ thuật (Technical Constraints & Contracts)</th></tr>
+<tr><td><strong>Thành viên 1</strong><br><strong>(Nguyễn Công Đức)</strong><br><em>Trưởng nhóm (Team Leader)</em></td><td>Lead Systems Architect & Core Daemon Engine</td><td><strong>45%</strong></td><td><strong>1. Base Architecture & Main Flow (<code>main.c</code>):</strong><br>- Thiết kế cấu trúc dữ liệu chung (<code>ServerConfig</code>, <code>HttpRequest</code>, <code>HttpResponse</code>).<br>- Bộ phân tích tham số CLI <code>getopt</code> xử lý đủ 6 cờ: <code>-d, -h, -c dir, -i address, -l file, -p port</code> và đối số bắt buộc <code>dir</code>.<br><strong>2. System Daemon & Process Management:</strong><br>- Hiện thực hàm <code>daemonize()</code> chuẩn POSIX (<code>fork</code>, <code>setsid</code>, ngắt terminal, chuyển <code>stdin/stdout/stderr</code> sang <code>/dev/null</code>, <code>umask(027)</code>).<br>- Xử lý chế độ <code>-d</code>: Chạy foreground, tiếp nhận tuần tự duy nhất 1 kết nối tại một thời điểm, log ra <code>stdout</code>.<br>- Bắt tín hiệu <code>SIGCHLD</code> qua <code>sigaction</code> + <code>SA_RESTART</code> kết hợp vòng lặp <code>waitpid(-1, &st, WNOHANG)</code> triệt tiêu 100% tiến trình Zombie.<br>- Bắt <code>SIGINT</code>, <code>SIGTERM</code> dọn dẹp đóng socket và thoát sạch.<br><strong>3. Dual-Stack Network Engine (<code>network.c/.h</code>):</strong><br>- Mở song song 2 socket IPv4 (<code>AF_INET</code>) và IPv6 (<code>AF_INET6</code>), gán <code>SO_REUSEADDR</code> và <code>IPV6_V6ONLY</code>.<br>- Lắng nghe <code>listen()</code> và tiếp nhận <code>accept()</code> đa kết nối.<br>- Trích xuất IP client bằng <code>inet_ntop()</code> chuyển tiếp cho Logger và CGI.<br><strong>4. Tích hợp & Quản trị Dự án:</strong><br>- Viết <code>Makefile</code> chuẩn hóa (<code>all, sws, clean, test, dist</code>).<br>- Kiểm tra rò rỉ bộ nhớ qua <code>valgrind</code>, kiểm thử đa nền tảng (NetBSD, Linux, OmniOS), review PR và bảo vệ nhánh <code>main</code>.</td><td>- <strong>Ràng buộc CLI:</strong> Bắt lỗi thiếu <code>dir</code> thoát mã >0; cổng <code>-p</code> phải trong dải $[1, 65535]$; kiểm tra quyền đọc thư mục gốc qua <code>access(dir, R_OK)</code>.<br>- <strong>Ràng buộc Daemon:</strong> Tuyệt đối không để lại tiến trình ma (Zero Zombie), không sinh bất kỳ thông điệp nào ra terminal khi chạy ở chế độ Daemon.<br>- <strong>Ràng buộc Socket:</strong> Hỗ trợ đầy đủ cả IPv4 và IPv6, tự động gán địa chỉ <code>INADDR_ANY</code> và <code>in6addr_any</code> nếu không có <code>-i</code>.</td></tr>
+<tr><td><strong>Thành viên 2</strong></td><td>HTTP Protocol & Parser Specialist</td><td><strong>28%</strong></td><td><strong>1. HTTP Request Parser (<code>http.c/.h</code>):</strong><br>- Đọc socket an toàn, phân tích cú pháp Request Line và Headers theo <strong>RFC 1945</strong>.<br>- Xử lý cơ chế hạ cấp âm thầm <code>HTTP/1.1</code> về <code>HTTP/1.0</code>.<br>- Phân tích tiêu đề điều kiện <code>If-Modified-Since</code> (chuyển đổi chuỗi ngày tháng GMT sang <code>time_t</code> để so sánh với <code>st_mtime</code>).<br><strong>2. HTTP Response Generator & Error Dispatcher:</strong><br>- Đóng gói 5 trường tiêu đề phản hồi bắt buộc: <code>Date</code> (GMT), <code>Server</code> (<code>sws/1.0</code>), <code>Last-Modified</code> (GMT), <code>Content-Type</code>, <code>Content-Length</code>.<br>- Xây dựng các hàm phát sinh trang mã lỗi HTML: <code>400 Bad Request</code>, <code>403 Forbidden</code>, <code>404 Not Found</code>, <code>500 Internal Server Error</code>, <code>501 Not Implemented</code>.<br>- Truyền tải nội dung file cho <code>GET</code>, chỉ gửi header cho <code>HEAD</code>, ngắt kết nối sau khi phục vụ xong.</td><td>- <strong>Ràng buộc URI:</strong> Chỉ chấp nhận Relative URI (RFC 1945 Mục 3.2.1). Nếu nhận Absolute URI (<code>http://...</code>) $\implies$ Trả về ngay <code>400 Bad Request</code>.<br>- <strong>Ràng buộc Method:</strong> Chỉ cho phép <code>GET</code> và <code>HEAD</code>. Các method khác (<code>POST, PUT, DELETE...</code>) $\implies$ Bắt buộc trả về <code>501 Not Implemented</code>.<br>- <strong>Ràng buộc Caching:</strong> Nếu file không bị sửa đổi sau thời điểm <code>If-Modified-Since</code> $\implies$ Trả về đúng mã <code>304 Not Modified</code>, không gửi Body.</td></tr>
+<tr><td><strong>Thành viên 3</strong></td><td>File System, MIME, CGI & Logging Specialist</td><td><strong>27%</strong></td><td><strong>1. Quản lý Tài nguyên & Bảo mật (<code>resource.c/.h</code>):</strong><br>- Phân giải URI sang đường dẫn vật lý trên đĩa dựa trên <code>doc_root</code>.<br>- Chống tấn công Path Traversal bằng kiểm tra ranh giới tuyệt đối qua <code>realpath()</code>.<br>- Phân giải thư mục cá nhân <code>~user</code> vào <code>/home/<user>/sws/</code> bằng <code>getpwnam()</code>.<br>- Tự động sinh danh mục thư mục (Directory Indexing) bằng <code>scandir</code> + <code>alphasort</code> khi không có <code>index.html</code> (bỏ qua file <code>.dot</code>).<br>- Tích hợp thư viện <code>libmagic</code> (<code>magic.h</code>) xác định MIME-Type theo mẫu <code>magic(5)</code>.<br><strong>2. Động cơ Thực thi CGI (<code>cgi.c/.h</code> - RFC 3875):</strong><br>- Kiểm tra cờ <code>-c dir</code> và tiền tố URI <code>/cgi-bin/</code>.<br>- Thiết lập đường ống liên tiến trình (<code>pipe</code>), <code>fork</code>, <code>dup2</code> chuyển hướng luồng I/O.<br>- Thiết lập biến môi trường chuẩn RFC 3875 (<code>REQUEST_METHOD, QUERY_STRING, SCRIPT_NAME, REMOTE_ADDR, SERVER_PORT, SERVER_PROTOCOL, GATEWAY_INTERFACE</code>).<br>- Chạy script bằng <code>execve()</code>, chuyển tiếp dữ liệu về socket client.<br><strong>3. Module Ghi Nhật ký Truy cập (<code>logger.c/.h</code>):</strong><br>- Ghi log khi có cờ <code>-l file</code> (hoặc in <code>stdout</code> khi có cờ <code>-d</code>).<br>- Định dạng chuẩn biến thể Apache: <code>%a %t "%r" %>s %b</code>.</td><td>- <strong>Ràng buộc Bảo mật:</strong> Nghiêm cấm mọi truy cập vượt ra ngoài Document Root. Nếu phát hiện <code>../../</code> cố ý thoát ranh giới $\implies$ Trả về <code>403 Forbidden</code> hoặc <code>404 Not Found</code>.<br>- <strong>Ràng buộc Indexing:</strong> Danh sách file phải được sắp xếp theo đúng thứ tự bảng chữ cái; tuyệt đối không hiển thị file ẩn bắt đầu bằng dấu chấm <code>.</code>.<br>- <strong>Ràng buộc CGI:</strong> Phải kiểm tra quyền thực thi <code>access(path, X_OK)</code> trước khi fork; thu hồi triệt để tiến trình con qua <code>waitpid()</code>.<br>- <strong>Ràng buộc Logging:</strong> Ghi file nguyên tử (Atomic append với cờ <code>O_APPEND</code>), chuẩn hóa định dạng thời gian ISO 8601 GMT (<code>%Y-%m-%dT%H:%M:%SZ</code>).</td></tr>
+</table>
+<hr>
+<h3>4.2. Quy chuẩn Quản lý Mã nguồn với Git (Git Workflow & Version Control)</h3>
+<p>Dự án áp dụng quy chuẩn quản lý phiên bản với Git tiêu chuẩn (hỗ trợ làm việc cục bộ hoặc đồng bộ qua kho lưu trữ cá nhân/nhóm):</p>
+<ol><li><strong>Khởi tạo và Cấu hình Kho lưu trữ:</strong></li></ol>
+<ul><li>Khởi tạo Git repository trong thư mục dự án:</li></ul>
+<p>     <code>`</code>bash</p>
+<p>     git init</p>
+<p>     git config user.name "Nguyen Cong Duc"</p>
+<p>     git config user.email "nguyencongduc@example.com"</p>
+<p>     <code>`</code></p>
+<ol><li><strong>Chiến lược Phân nhánh Tính năng (Feature Branching Strategy):</strong></li></ol>
+<ul><li><strong>Nhánh <code>main</code>:</strong> Lưu trữ phiên bản mã nguồn ổn định nhất, sẵn sàng đóng gói nộp bài.</li></ul>
+<ul><li><strong>Các nhánh tính năng độc lập:</strong></li></ul>
+<ul><li><code>feature/daemon-core</code>: Phát triển khung sườn <code>main.c</code>, CLI parser, quy trình hóa Daemon và Socket mạng (Trưởng nhóm phụ trách).</li></ul>
+<ul><li><code>feature/http-parser</code>: Xây dựng bộ phân tích HTTP request, xử lý phương thức GET/HEAD và mã trạng thái.</li></ul>
+<ul><li><code>feature/resource-mgmt</code>: Phân giải đường dẫn tài nguyên, chống Path Traversal, Directory Indexing và <code>libmagic</code>.</li></ul>
+<ul><li><code>feature/cgi-logging</code>: Hiện thực động cơ chạy CGI (RFC 3875) và cơ chế ghi log chuẩn Apache.</li></ul>
+<ol><li><strong>Quy chuẩn Thông điệp Commit (Meaningful Commit Messages):</strong></li></ol>
+<ul><li>Tuân thủ nguyên tắc giảng viên yêu cầu: <em>"Commit early, commit often, communicate regularly"</em>.</li></ul>
+<ul><li>Mỗi commit gắn liền với một thay đổi logic cụ thể, sử dụng tiền tố chuẩn:</li></ul>
+<ul><li><code>feat(core): setup daemon process and socket dual-stack</code></li></ul>
+<ul><li><code>feat(http): parse GET and HEAD request lines</code></li></ul>
+<ul><li><code>feat(resource): implement alphanumeric directory indexing</code></li></ul>
+<ul><li><code>feat(cgi): support RFC 3875 environment variables and execution</code></li></ul>
+<ul><li><code>fix(security): prevent directory traversal via realpath check</code></li></ul>
+<ol><li><strong>Trích xuất Nhật ký Nộp bài:</strong></li></ol>
+<ul><li>Giảng viên sẽ chấm điểm dựa trên lịch sử commit, nhóm trích xuất file log đính kèm vào gói nộp bài bằng lệnh:</li></ul>
+<p>     <code>`</code>bash</p>
+<p>     git log --stat > git_log.txt</p>
+<p>     <code>`</code></p>
+<hr>
+<h3>4.3. Quy chuẩn Biên dịch & Đóng gói Nộp bài (Deliverables)</h3>
+<ul><li><strong>Quy chuẩn <code>Makefile</code>:</strong></li></ul>
+<ul><li>Compiler: <code>gcc</code></li></ul>
+<ul><li>Flags bắt buộc: <code>-Wall -Wextra -Werror -pedantic -std=c99 -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700</code></li></ul>
+<ul><li>Thư viện liên kết: <code>-lmagic</code></li></ul>
+<ul><li><strong>Gói nộp bài cuối cùng:</strong></li></ul>
+<ul><li>Định dạng file nén: <code>user1-user2-user3.tar</code> (chứa toàn bộ thư mục cùng tên).</li></ul>
+<ul><li>Cấu trúc thư mục:</li></ul>
+<p>    <code>`</code>text</p>
+<p>    user1-user2-user3/</p>
+<p>    ├── Makefile</p>
+<p>    ├── README</p>
+<p>    ├── checklist</p>
+<p>    ├── SPECIFICATION.md</p>
+<p>    └── src/</p>
+<p>        ├── main.c</p>
+<p>        ├── network.c / network.h</p>
+<p>        ├── http.c / http.h</p>
+<p>        ├── resource.c / resource.h</p>
+<p>        ├── cgi.c / cgi.h</p>
+<p>        └── logger.c / logger.h</p>
+<p>    <code>`</code></p>
+<hr>
+<h2>PHẦN 5: MA TRẬN KIỂM THỬ CHẤP NHẬN (ACCEPTANCE TEST MATRIX)</h2>
+<table>
+<tr><th>Mã kiểm thử</th><th>Tình huống kiểm thử</th><th>Câu lệnh thực thi</th><th>Tiêu chí chấp thuận (Pass Criteria)</th></tr>
+<tr><td><strong>TC-01</strong></td><td>Trợ giúp sử dụng</td><td><code>./sws -h</code></td><td>In hướng dẫn sử dụng và thoát mã 0.</td></tr>
+<tr><td><strong>TC-02</strong></td><td>Chế độ Debug cổng tùy chọn</td><td><code>./sws -d -p 9090 ./www</code></td><td>Chạy foreground cổng 9090, in log ra màn hình console.</td></tr>
+<tr><td><strong>TC-03</strong></td><td>Chế độ Daemon nền</td><td><code>./sws -p 8080 ./www</code></td><td>Chạy ngầm lập tức, hiển thị tiến trình trong `ps -ef \</td><td>grep sws`.</td></tr>
+<tr><td><strong>TC-04</strong></td><td>Yêu cầu GET file tĩnh</td><td><code>curl -i http://localhost:8080/index.html</code></td><td>Trả về <code>HTTP/1.0 200 OK</code>, <code>Content-Type: text/html</code>, đúng dữ liệu file.</td></tr>
+<tr><td><strong>TC-05</strong></td><td>Yêu cầu HEAD</td><td><code>curl -I http://localhost:8080/index.html</code></td><td>Trả về khối Headers đầy đủ, không có phần Body.</td></tr>
+<tr><td><strong>TC-06</strong></td><td>Header <code>If-Modified-Since</code></td><td><code>curl -i -H "If-Modified-Since: <future_date>" http://localhost:8080/index.html</code></td><td>Trả về <code>HTTP/1.0 304 Not Modified</code>, không gửi Body.</td></tr>
+<tr><td><strong>TC-07</strong></td><td>Directory Indexing tự động</td><td><code>curl -i http://localhost:8080/docs/</code></td><td>Trả về mã HTML danh sách tệp theo thứ tự chữ cái, ẩn tệp <code>.dot</code>.</td></tr>
+<tr><td><strong>TC-08</strong></td><td>Thư mục người dùng <code>~user</code></td><td><code>curl -i http://localhost:8080/~nguyencongduc/</code></td><td>Phân giải vào <code>/home/nguyencongduc/sws/index.html</code>.</td></tr>
+<tr><td><strong>TC-09</strong></td><td>Chặn Directory Traversal</td><td><code>curl -i http://localhost:8080/../../etc/passwd</code></td><td>Máy chủ chặn và trả về <code>403 Forbidden</code> hoặc <code>404 Not Found</code>.</td></tr>
+<tr><td><strong>TC-10</strong></td><td>Chạy kịch bản CGI</td><td><code>curl -i http://localhost:8080/cgi-bin/test.cgi</code></td><td>Thực thi script và nhận phản hồi <code>200 OK</code> do script sinh ra.</td></tr>
+<tr><td><strong>TC-11</strong></td><td>Ghi log Apache</td><td><code>./sws -l access.log ./www</code></td><td>File <code>access.log</code> ghi nhận dòng log đúng định dạng <code>%a %t "%r" %>s %b</code>.</td></tr>
+<tr><td><strong>TC-12</strong></td><td>Hạ cấp HTTP/1.1</td><td><code>curl -i --http1.1 http://localhost:8080/</code></td><td>Máy chủ tự động hạ cấp và phản hồi chuẩn <code>HTTP/1.0</code>.</td></tr>
+<tr><td><strong>TC-13</strong></td><td>Đối chiếu chuẩn <code>bozohttpd(8)</code></td><td>Chạy song song <code>bozohttpd</code> cổng 8080 và <code>sws</code> cổng 8081</td><td>Kết quả trả về của <code>sws -p 8081 -c cgi-bin docroot</code> tương đồng với <code>/usr/libexec/httpd -b -I 8080 -X -u -p sws -c cgi-bin docroot</code>.</td></tr>
+</table>
+</body></html>
